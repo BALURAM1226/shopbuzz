@@ -6,6 +6,20 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const axios = require('axios');
 
+// Persistent Neural Fitting Engine (Cache the client to avoid 502 handshakes)
+let gradioClient = null;
+const getGradioClient = async () => {
+    if (gradioClient) return gradioClient;
+    try {
+        const { client } = await import("@gradio/client");
+        gradioClient = await client("levihsu/OOTDiffusion");
+        return gradioClient;
+    } catch (err) {
+        console.error("AI Engine Hub Failure:", err);
+        return null;
+    }
+};
+
 // Get Categorized Products (Dynamic Filtering)
 route.get('/products', async (req, res) => {
   try {
@@ -115,35 +129,33 @@ route.post('/virtual-try-on', upload.single('human_image'), async (req, res) => 
       return res.status(400).json({ error: "Missing required images" });
     }
 
-    let client;
-    try {
-      const gradio = await import("@gradio/client");
-      client = await gradio.client("levihsu/OOTDiffusion");
-    } catch (err) {
-      console.error("Gradio Client Handshake Failed:", err);
-      throw new Error("Neural Hub Connection Refused");
-    }
+    const app = await getGradioClient();
+    if (!app) throw new Error("AI Engine offline. Neural Hub connection refused.");
+
+    const { handle_file } = await import("@gradio/client");
     const humanBlob = new Blob([humanImageBuffer]);
 
-    const response = await axios.get(garment_url, { responseType: 'arraybuffer' });
-    const garmentBlob = new Blob([response.data]);
+    const garmentRes = await axios.get(garment_url, { responseType: 'arraybuffer' });
+    const garmentBlob = new Blob([garmentRes.data]);
 
-    // Map internal categories to OOTDiffusion expected format
+    // Precise Category Mapping for OOTDiffusion Architecture
     let ootCategory = "Upper-body";
-    if (category.toLowerCase().includes("bottom") || category.toLowerCase().includes("lower")) {
-      ootCategory = "Lower-body";
-    } else if (category.toLowerCase().includes("dress")) {
-      ootCategory = "Dress";
+    const catSearch = category.toLowerCase();
+    if (catSearch.includes("lower") || catSearch.includes("bottom") || catSearch.includes("pant") || catSearch.includes("jeans")) {
+        ootCategory = "Lower-body";
+    } else if (catSearch.includes("dress") || catSearch.includes("onepiece")) {
+        ootCategory = "Dress";
     }
 
-    const result = await client.predict("/predict", [
-      gradio.handle_file(humanBlob),
-      gradio.handle_file(garmentBlob),
-      ootCategory,
-      1,    // n_samples
-      20,   // n_steps
-      2,    // image_scale
-      -1,   // seed
+    // Execute Neural Mapping
+    const result = await app.predict("/predict", [
+        handle_file(humanBlob),
+        handle_file(garmentBlob),
+        ootCategory,
+        1,    // n_samples
+        20,   // n_steps
+        2,    // image_scale
+        -1,   // seed
     ]);
 
     // OOTDiffusion returns a Gallery: list of {image: {url, path}, caption}

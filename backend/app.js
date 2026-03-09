@@ -12,7 +12,11 @@ const DB = process.env.DB;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: ["https://shopbuzz-ecommerce.netlify.app", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
 // Routes
 app.use("/api/v1", productRouter);
