@@ -1,4 +1,4 @@
-import React, { useContext, useState, useRef, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../../services/firebase';
 import { signOut } from 'firebase/auth';
@@ -11,7 +11,6 @@ import toast from 'react-hot-toast';
 
 const Navbar = () => {
     const user = auth.currentUser;
-    const navigate = useNavigate();
     const { trailRoomItems } = useContext(TrailRoomContext);
     const { cart } = useContext(CartContext);
     const { wishlistItems } = useContext(WishlistContext);

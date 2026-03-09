@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import ProductCard from '../../features/ProductCard';
-import ProductFilter from '../Filter/Filter';
 import API_BASE_URL from '../../../apiConfig';
 import CartContext from '../../../context/addToCart/cartContext';
 

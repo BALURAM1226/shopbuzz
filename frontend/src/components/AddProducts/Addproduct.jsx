@@ -44,7 +44,7 @@ const Addproduct = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/register-products`, formData);
+      await axios.post(`${API_BASE_URL}/register-products`, formData);
       toast.success('Product published successfully! ✨ Inventory synchronized.');
       setFormData({
         productName: '',

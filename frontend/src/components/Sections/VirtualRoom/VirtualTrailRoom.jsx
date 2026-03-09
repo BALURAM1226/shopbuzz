@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import axios from 'axios';
 import TrailRoomContext from '../../../context/trailRoom/trailRoomContext';
 import API_BASE_URL from "../../../apiConfig";
@@ -11,7 +11,6 @@ const VirtualTrailRoom = () => {
     const { addToCart } = useContext(CartContext);
     const [products, setProducts] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [userImage, setUserImage] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [processing, setProcessing] = useState(false);
@@ -36,13 +35,11 @@ const VirtualTrailRoom = () => {
             name.includes('leggings') || name.includes('pyjama');
     };
 
-    const getTrailRoomProducts = async () => {
+    const getTrailRoomProducts = useCallback(async () => {
         if (trailRoomItems.length === 0) {
             setProducts([]);
-            setLoading(false);
             return;
         }
-        setLoading(true);
         try {
             const response = await axios.post(`${API_BASE_URL}/getCartItems`, {
                 body: trailRoomItems
@@ -52,14 +49,12 @@ const VirtualTrailRoom = () => {
         } catch (error) {
             console.error("Error fetching trail room products:", error);
             toast.error("Failed to load your Virtual Suite. Please refresh.");
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [trailRoomItems]);
 
     useEffect(() => {
         getTrailRoomProducts();
-    }, [trailRoomItems]);
+    }, [getTrailRoomProducts]);
 
     const toggleSelect = (id) => {
         if (selectedIds.includes(id)) {

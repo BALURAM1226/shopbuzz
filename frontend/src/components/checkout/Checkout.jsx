@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { auth } from "../../services/firebase";
@@ -20,23 +20,7 @@ const Checkout = () => {
     });
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!user) {
-            toast.error("Security Checkpoint: Please log in to complete your architectural order.", {
-                icon: '🔒',
-                style: { borderRadius: '1rem', background: '#333', color: '#fff' }
-            });
-            navigate("/login");
-            return;
-        }
-        if (cart.length === 0) {
-            navigate("/addToCart");
-            return;
-        }
-        fetchCartDetails();
-    }, [user, cart]);
-
-    const fetchCartDetails = async () => {
+    const fetchCartDetails = useCallback(async () => {
         try {
             const uniqueIds = [...new Set(cart.map(item => item.id))];
             const response = await axios.post(`${API_BASE_URL}/getCartItems`, {
@@ -55,7 +39,23 @@ const Checkout = () => {
         } catch (err) {
             console.error("Error fetching checkout details:", err);
         }
-    };
+    }, [cart]);
+
+    useEffect(() => {
+        if (!user) {
+            toast.error("Security Checkpoint: Please log in to complete your architectural order.", {
+                icon: '🔒',
+                style: { borderRadius: '1rem', background: '#333', color: '#fff' }
+            });
+            navigate("/login");
+            return;
+        }
+        if (cart.length === 0) {
+            navigate("/addToCart");
+            return;
+        }
+        fetchCartDetails();
+    }, [user, cart, fetchCartDetails, navigate]);
 
     const totalAmount = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
@@ -172,7 +172,7 @@ const Checkout = () => {
                             {cartItems.map((item, i) => (
                                 <div key={i} className="flex items-center gap-6 group">
                                     <div className="w-20 h-24 bg-white rounded-2xl overflow-hidden border border-slate-200 p-2">
-                                        <img src={item.productImage} className="w-full h-full object-contain mix-blend-multiply" />
+                                        <img src={item.productImage} alt={item.productName} className="w-full h-full object-contain mix-blend-multiply" />
                                     </div>
                                     <div className="flex-1 space-y-1">
                                         <h5 className="text-xs font-black text-slate-900 uppercase leading-none">{item.productName}</h5>

@@ -5,7 +5,6 @@ import API_BASE_URL from '../../../apiConfig';
 
 const VirtualTryOn = ({ open, handleClose, productImage, productName }) => {
     const [userImage, setUserImage] = useState(null);
-    const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [resultImage, setResultImage] = useState(null);
     const [step, setStep] = useState(1); // 1: Upload, 2: Processing, 3: Result
@@ -30,7 +29,6 @@ const VirtualTryOn = ({ open, handleClose, productImage, productName }) => {
         if (!selectedFile) return;
 
         setStep(2);
-        setProcessing(true);
         setProgress(10);
 
         try {
@@ -59,14 +57,12 @@ const VirtualTryOn = ({ open, handleClose, productImage, productName }) => {
             setTimeout(() => {
                 setResultImage(response.data.result_image);
                 setStep(3);
-                setProcessing(false);
             }, 500);
 
         } catch (error) {
             console.error('Try-on failed:', error);
             toast.error(error.response?.data?.error || 'AI Processing failed. Please try a different photo or check the product image.');
             setStep(1);
-            setProcessing(false);
         }
     };
 

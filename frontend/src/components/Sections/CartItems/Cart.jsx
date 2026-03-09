@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import CartContext from '../../../context/addToCart/cartContext';
@@ -8,15 +8,12 @@ import toast from "react-hot-toast";
 const Cart = () => {
   const { setCart, cart } = useContext(CartContext);
   const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  const getCartItems = async () => {
+  const getCartItems = useCallback(async () => {
     if (cart.length === 0) {
       setCartItems([]);
-      setLoading(false);
       return;
     }
-    setLoading(true);
     try {
       const response = await axios.post(`${API_BASE_URL}/getCartItems`, {
         body: cart.map(item => item.id)
@@ -36,10 +33,8 @@ const Cart = () => {
       setCartItems(detailedItems);
     } catch (error) {
       console.error("Error fetching cart items:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [cart]);
 
   const removeFromCart = (productId, size) => {
     const updatedCart = cart.filter(item => !(item.id === productId && item.size === size));
@@ -54,7 +49,7 @@ const Cart = () => {
 
   useEffect(() => {
     getCartItems();
-  }, [cart]);
+  }, [getCartItems]);
 
   if (cart.length === 0) {
     return (
