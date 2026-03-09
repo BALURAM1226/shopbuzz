@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { auth } from '../../services/firebase';
 import { signOut } from 'firebase/auth';
 import CartContext from '../../context/addToCart/cartContext';
