@@ -12,8 +12,19 @@ const DB = process.env.DB;
 
 // Middleware
 app.use(express.json());
+
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? ["https://shopbuzz-ecommerce.netlify.app"] 
+  : ["http://localhost:3000", "http://localhost:5173", "http://localhost:5000"];
+
 app.use(cors({
-  origin: ["https://shopbuzz-ecommerce.netlify.app", "http://localhost:3000"],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS Policy Breach: Neural Access Refused'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
