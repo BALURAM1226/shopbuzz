@@ -115,8 +115,14 @@ route.post('/virtual-try-on', upload.single('human_image'), async (req, res) => 
       return res.status(400).json({ error: "Missing required images" });
     }
 
-    const { client, handle_file } = await import("@gradio/client");
-    const app = await client("levihsu/OOTDiffusion");
+    let client;
+    try {
+      const gradio = await import("@gradio/client");
+      client = await gradio.client("levihsu/OOTDiffusion");
+    } catch (err) {
+      console.error("Gradio Client Handshake Failed:", err);
+      throw new Error("Neural Hub Connection Refused");
+    }
     const humanBlob = new Blob([humanImageBuffer]);
 
     const response = await axios.get(garment_url, { responseType: 'arraybuffer' });
@@ -130,9 +136,9 @@ route.post('/virtual-try-on', upload.single('human_image'), async (req, res) => 
       ootCategory = "Dress";
     }
 
-    const result = await app.predict("/predict", [
-      handle_file(humanBlob),
-      handle_file(garmentBlob),
+    const result = await client.predict("/predict", [
+      gradio.handle_file(humanBlob),
+      gradio.handle_file(garmentBlob),
       ootCategory,
       1,    // n_samples
       20,   // n_steps
